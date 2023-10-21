@@ -30,7 +30,7 @@ func main() {
 
 	var request pb.OrderServiceRequest
 	json.Unmarshal(data, &request)
-
+	// para conectar a VM2 : "10.10.10.221:8080"
 	conn, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
