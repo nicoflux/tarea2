@@ -9,6 +9,7 @@ import (
 	"net"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
@@ -19,7 +20,8 @@ type server struct {
 }
 
 type Order struct {
-	OrderID  string `json:"orderID"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	OrderID  string             `json:"orderID"`
 	Products []struct {
 		Title       string  `json:"title"`
 		Author      string  `json:"author"`
@@ -43,6 +45,21 @@ type Order struct {
 		} `json:"location"`
 		Phone string `json:"phone"`
 	} `json:"customer"`
+	Deliveries []struct {
+		ShippingAddress struct {
+			Name       string `json:"name"`
+			Lastname   string `json:"lastname"`
+			Address1   string `json:"address1"`
+			Address2   string `json:"address2"`
+			City       string `json:"city"`
+			State      string `json:"state"`
+			PostalCode string `json:"postalCode"`
+			Country    string `json:"country"`
+			Phone      string `json:"phone"`
+		} `json:"shippingAddress"`
+		ShippingMethod string `json:"shippingMethod"`
+		TrackingNumber string `json:"trackingNumber"`
+	} `json:"deliveries"`
 }
 
 func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.OrderServiceReply, error) {
@@ -54,7 +71,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	mongo_client, err := connectToMongoDB()
 	if err != nil {
 		fmt.Println("Error al conectar a MongoDB:", err)
-		return
+		return nil, err
 	}
 	defer closeMongoDBConnection(mongo_client)
 	var order Order
@@ -97,6 +114,11 @@ func closeMongoDBConnection(client *mongo.Client) {
 }
 
 func insertData(client *mongo.Client, order Order) string {
+
+	order.ID = primitive.NewObjectID()
+	order.OrderID = order.ID.Hex()
+
+	// Insertion dans MongoDB
 	collection := client.Database("tarea2").Collection("orders")
 
 	resp, err := collection.InsertOne(context.Background(), order)
@@ -106,7 +128,10 @@ func insertData(client *mongo.Client, order Order) string {
 	}
 
 	fmt.Println("Documento insertado con éxito, ID:", resp.InsertedID)
-	return resp.InsertedID
+	myObjectId := resp.InsertedID.(primitive.ObjectID)
+	return myObjectId.Hex()
+	//return
+
 }
 
 func main() {
