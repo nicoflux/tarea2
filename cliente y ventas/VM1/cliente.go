@@ -31,7 +31,7 @@ func main() {
 	var request pb.OrderServiceRequest
 	json.Unmarshal(data, &request)
 
-	conn, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("10.10.11.221:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		log.Fatal(err)
