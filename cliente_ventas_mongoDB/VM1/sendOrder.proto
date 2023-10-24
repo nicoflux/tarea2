@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option go_package = "/pb";
+
+service OrderService {
+    rpc Order(OrderServiceRequest) returns (OrderServiceReply) {}
+}
+
+message OrderServiceReply {
+    string orderResponse = 1;
+}
+
+message Product {
+    string title = 1;
+    string author = 2;
+    string genre = 3;
+    int32 pages = 4;
+    string publication = 5;
+    int32 quantity = 6;
+    double price = 7;
+}
+
+message Location {
+    string address1 = 1;
+    string address2 = 2;
+    string city = 3;
+    string state = 4;
+    string postalCode = 5;
+    string country = 6;
+}
+
+message Customer {
+    string name = 1;
+    string lastname = 2;
+    string email = 3;
+    Location location = 4;
+    string phone = 5;
+}
+
+message OrderServiceRequest {
+    repeated Product products = 1;
+    Customer customer = 2;
+}
+
+
