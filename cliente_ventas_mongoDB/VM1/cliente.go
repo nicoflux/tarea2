@@ -43,5 +43,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Receive response => %s ", resp.OrderResponse)
+	fmt.Printf("Receive response => %s \n", resp.OrderResponse)
 }
