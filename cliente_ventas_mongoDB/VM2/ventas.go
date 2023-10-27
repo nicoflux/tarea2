@@ -67,7 +67,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Reçu : %s", string(receivedJSON))
+	log.Printf("Recibido : %s", string(receivedJSON))
 	mongo_client, err := connectToMongoDB()
 	if err != nil {
 		fmt.Println("Error al conectar a MongoDB:", err)
@@ -89,7 +89,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 func connectToMongoDB() (*mongo.Client, error) {
 	//URI := os.Getenv("CONNECTION_STRING")
 	//mongodb://admin:admin@127.0.0.1:27017/gotravel ???
-	URI := "mongodb://localhost:27017/tarea2"
+	URI := "admin:admin@localhost:27017/tarea2"
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(URI).SetServerAPIOptions(serverAPI)
 
@@ -118,7 +118,6 @@ func insertData(client *mongo.Client, order Order) string {
 	order.ID = primitive.NewObjectID()
 	order.OrderID = order.ID.Hex()
 
-	// Insertion dans MongoDB
 	collection := client.Database("tarea2").Collection("orders")
 
 	resp, err := collection.InsertOne(context.Background(), order)
