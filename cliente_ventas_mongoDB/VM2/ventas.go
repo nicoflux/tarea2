@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+var mongo_Client *mongo.Client
+
 type server struct {
 	pb.OrderServiceServer
 }
@@ -68,19 +70,13 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 		return nil, err
 	}
 	log.Printf("Recibido : %s", string(receivedJSON))
-	mongo_client, err := connectToMongoDB()
-	if err != nil {
-		fmt.Println("Error al conectar a MongoDB:", err)
-		return nil, err
-	}
-	defer closeMongoDBConnection(mongo_client)
 	var order Order
 	err = json.Unmarshal(receivedJSON, &order)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	orderId := insertData(mongo_client, order)
+	orderId := insertData(order)
 	return &pb.OrderServiceReply{
 		OrderResponse: fmt.Sprintf("You order id is : %s", orderId),
 	}, nil
@@ -88,7 +84,6 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 
 func connectToMongoDB() (*mongo.Client, error) {
 	//URI := os.Getenv("CONNECTION_STRING")
-	//mongodb://admin:admin@127.0.0.1:27017/gotravel ???
 	URI := "mongodb://admin:admin@127.0.0.1:27017/tarea2"
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(URI).SetServerAPIOptions(serverAPI)
@@ -113,12 +108,12 @@ func closeMongoDBConnection(client *mongo.Client) {
 	}
 }
 
-func insertData(client *mongo.Client, order Order) string {
+func insertData(order Order) string {
 
 	order.ID = primitive.NewObjectID()
 	order.OrderID = order.ID.Hex()
 
-	collection := client.Database("tarea2").Collection("orders")
+	collection := mongo_Client.Database("tarea2").Collection("orders")
 
 	resp, err := collection.InsertOne(context.Background(), order)
 	if err != nil {
@@ -134,6 +129,12 @@ func insertData(client *mongo.Client, order Order) string {
 }
 
 func main() {
+	var err error
+	mongo_Client, err = connectToMongoDB()
+	if err != nil {
+		fmt.Println("Error al conectar a MongoDB:", err)
+	}
+	defer closeMongoDBConnection(mongo_Client)
 	listener, err := net.Listen("tcp", ":8080")
 	fmt.Println("Server is running on port 8080")
 	if err != nil {
