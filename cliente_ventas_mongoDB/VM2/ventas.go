@@ -89,7 +89,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 func connectToMongoDB() (*mongo.Client, error) {
 	//URI := os.Getenv("CONNECTION_STRING")
 	//mongodb://admin:admin@127.0.0.1:27017/gotravel ???
-	URI := "admin:admin@localhost:27017/tarea2"
+	URI := "mongodb://admin:admin@localhost:27017/tarea2"
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(URI).SetServerAPIOptions(serverAPI)
 
