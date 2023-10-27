@@ -54,7 +54,7 @@ type Order struct {
 	} `json:"deliveries"`
 }
 
-func insertData(order Order) string {
+func insertData(order Order) {
 
 	// Connect to remote MongoDB server
 	clientOptions := options.Client().ApplyURI("mongodb://10.10.11.221:27017")
