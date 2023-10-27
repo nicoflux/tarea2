@@ -4,12 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"grpc-golang/pb"
 	"os"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var mongo_Client *mongo.Client
+
+type server struct {
+	pb.OrderServiceServer
+}
 
 type Order struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty"`
@@ -54,29 +62,63 @@ type Order struct {
 	} `json:"deliveries"`
 }
 
-func insertData(order Order) {
+func connectToMongoDB() (*mongo.Client, error) {
+	//URI := os.Getenv("CONNECTION_STRING")
+	URI := "mongodb://admin:admin@10.10.11.221:27017/tarea2"
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(URI).SetServerAPIOptions(serverAPI)
 
-	// Connect to remote MongoDB server
-	clientOptions := options.Client().ApplyURI("mongodb://10.10.11.221:27017")
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	// Create a new client and connect to the server
+	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		panic(err)
 	}
 
-	// Insert JSON data into collection
-	collection := client.Database("tarea2").Collection("orders")
-	insertResult, err := collection.InsertOne(context.TODO(), order)
-	if err != nil {
+	// Send a ping to confirm a successful connection
+	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Err(); err != nil {
 		panic(err)
 	}
-	fmt.Println("Inserted document with ID:", insertResult.InsertedID)
+	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
+	return client, nil
+}
+
+func closeMongoDBConnection(client *mongo.Client) {
+	if err := client.Disconnect(context.Background()); err != nil {
+		fmt.Println("Error al desconectar de MongoDB:", err)
+	}
+}
+
+func insertData(order Order) string {
+
+	order.ID = primitive.NewObjectID()
+	order.OrderID = order.ID.Hex()
+
+	collection := mongo_Client.Database("tarea2").Collection("orders")
+
+	resp, err := collection.InsertOne(context.Background(), order)
+	if err != nil {
+		fmt.Println("Error al insertar datos en MongoDB:", err)
+		return ""
+	}
+
+	fmt.Println("Documento insertado con éxito, ID:", resp.InsertedID)
+	myObjectId := resp.InsertedID.(primitive.ObjectID)
+	return myObjectId.Hex()
+	//return
 
 }
 
 func main() {
-	file, _ := os.Open("products.json")
-	defer file.Close()
+	var err error
+	mongo_Client, err = connectToMongoDB()
+	if err != nil {
+		fmt.Println("Error al conectar a MongoDB:", err)
+	}
+	defer closeMongoDBConnection(mongo_Client)
 	var order Order
+	file, _ := os.Open("data.json")
+	defer file.Close()
 	json.NewDecoder(file).Decode(&order)
-	insertData(order)
+	orderId := insertData(order)
+	fmt.Println("Order ID: ", orderId)
 }
