@@ -132,21 +132,24 @@ func insertData(order Order) string {
 func updateData(order Order) {
 	collection := mongo_Client.Database("tarea2").Collection("orders")
 	filter := bson.M{"_id": order.OrderID}
+	var delivery Delivery
+	delivery.ShippingAddress.Name = order.Customer.Name
+	delivery.ShippingAddress.Lastname = order.Customer.Lastname
+	delivery.ShippingAddress.Address1 = order.Customer.Location.Address1
+	delivery.ShippingAddress.Address2 = order.Customer.Location.Address2
+	delivery.ShippingAddress.City = order.Customer.Location.City
+	delivery.ShippingAddress.State = order.Customer.Location.State
+	delivery.ShippingAddress.PostalCode = order.Customer.Location.PostalCode
+	delivery.ShippingAddress.Country = order.Customer.Location.Country
+	delivery.ShippingAddress.Phone = order.Customer.Phone
+	delivery.ShippingMethod = "USPS"
+	delivery.TrackingNumber = "1234567890"
 	updateDoc := bson.M{
 		"$set": bson.M{
-			"deliveries.0.trackingNumber":             "1234567890",
-			"deliveries.0.shippingMethod":             "USPS",
-			"deliveries.0.shippingAddress.name":       order.Customer.Name,
-			"deliveries.0.shippingAddress.lastname":   order.Customer.Lastname,
-			"deliveries.0.shippingAddress.address1":   order.Customer.Location.Address1,
-			"deliveries.0.shippingAddress.address2":   order.Customer.Location.Address2,
-			"deliveries.0.shippingAddress.city":       order.Customer.Location.City,
-			"deliveries.0.shippingAddress.state":      order.Customer.Location.State,
-			"deliveries.0.shippingAddress.postalCode": order.Customer.Location.PostalCode,
-			"deliveries.0.shippingAddress.country":    order.Customer.Location.Country,
-			"deliveries.0.shippingAddress.phone":      order.Customer.Phone,
+			"deliveries.0": delivery,
 		},
 	}
+	fmt.Println(delivery)
 	// Execute update one on orders collection
 	result, err := collection.UpdateOne(context.TODO(), filter, updateDoc)
 	if err != nil {
