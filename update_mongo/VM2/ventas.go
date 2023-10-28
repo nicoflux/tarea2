@@ -131,7 +131,7 @@ func insertData(order Order) string {
 
 func updateData(order Order) {
 	collection := mongo_Client.Database("tarea2").Collection("orders")
-	filter := bson.M{"_id": order.OrderID}
+	filter := bson.M{"orderid": order.OrderID}
 	var delivery Delivery
 	delivery.ShippingAddress.Name = order.Customer.Name
 	delivery.ShippingAddress.Lastname = order.Customer.Lastname
