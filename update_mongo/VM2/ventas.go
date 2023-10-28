@@ -20,6 +20,21 @@ var mongo_Client *mongo.Client
 type server struct {
 	pb.OrderServiceServer
 }
+type Delivery struct {
+	ShippingAddress struct {
+		Name       string `json:"name"`
+		Lastname   string `json:"lastname"`
+		Address1   string `json:"address1"`
+		Address2   string `json:"address2"`
+		City       string `json:"city"`
+		State      string `json:"state"`
+		PostalCode string `json:"postalCode"`
+		Country    string `json:"country"`
+		Phone      string `json:"phone"`
+	} `json:"shippingAddress"`
+	ShippingMethod string `json:"shippingMethod"`
+	TrackingNumber string `json:"trackingNumber"`
+}
 
 type Order struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty"`
@@ -47,21 +62,7 @@ type Order struct {
 		} `json:"location"`
 		Phone string `json:"phone"`
 	} `json:"customer"`
-	Deliveries []struct {
-		ShippingAddress struct {
-			Name       string `json:"name"`
-			Lastname   string `json:"lastname"`
-			Address1   string `json:"address1"`
-			Address2   string `json:"address2"`
-			City       string `json:"city"`
-			State      string `json:"state"`
-			PostalCode string `json:"postalCode"`
-			Country    string `json:"country"`
-			Phone      string `json:"phone"`
-		} `json:"shippingAddress"`
-		ShippingMethod string `json:"shippingMethod"`
-		TrackingNumber string `json:"trackingNumber"`
-	} `json:"deliveries"`
+	Deliveries []Delivery `json:"deliveries"`
 }
 
 func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.OrderServiceReply, error) {
@@ -75,7 +76,8 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	var delivery Delivery
+	order.Deliveries = append(order.Deliveries, delivery)
 	orderId := insertData(order)
 	updateData(order)
 	return &pb.OrderServiceReply{
