@@ -74,7 +74,6 @@ func main() {
 		}
 		order.GroupID = "G4b!7S9k#3"
 		// Imprime el mensaje recibido en VM3
-		fmt.Println("Mensaje recibido en VM3:")
 		fmt.Println("Orden n° ", order.OrderID)
 
 		// Envía el mensaje a la API Gateway

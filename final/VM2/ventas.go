@@ -70,7 +70,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Order Recibido")
+	log.Printf("Orden Recibido")
 	var order Order
 	err = json.Unmarshal(receivedJSON, &order)
 	if err != nil {
