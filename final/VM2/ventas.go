@@ -78,6 +78,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	}
 
 	orderId := insertData(order)
+	order.orderID = orderId
 	sendRabbitMQ(order)
 	return &pb.OrderServiceReply{
 		OrderResponse: fmt.Sprintf("You order id is : %s", orderId),
