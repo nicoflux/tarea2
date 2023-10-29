@@ -68,7 +68,6 @@ func main() {
 				"quantity": 2,
 				"price": 20
 			}
-			// Agrega el resto de los productos aquí...
 		],
 		"customer": {
 			"name": "John",
