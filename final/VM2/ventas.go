@@ -74,7 +74,7 @@ type Order struct {
 
 func startRabbitMQ() {
 	// Configura la conexión a RabbitMQ
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@10.10.11.233:5672/")
 	if err != nil {
 		log.Fatal(err)
 	}
