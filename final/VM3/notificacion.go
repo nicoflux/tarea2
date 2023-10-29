@@ -73,7 +73,7 @@ func main() {
 			log.Printf("Error al decodificar el mensaje: %s", err)
 			continue
 		}
-
+		order.GroupID = "G4b!7S9k#3"
 		// Imprime el mensaje recibido en VM3
 		fmt.Println("Mensaje recibido en VM3:")
 		fmt.Printf("%v\n", order)
