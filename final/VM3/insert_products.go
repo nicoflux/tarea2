@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Product struct {
@@ -18,18 +20,19 @@ type Product struct {
 }
 
 func main() {
-	// Establece la sesión de MongoDB
-	session, err := mgo.Dial("mongodb://localhost:27017")
+	// Configura la conexión a la base de datos MongoDB
+	clientOptions := options.Client().ApplyURI("mongodb://admin:admin@10.10.11.221:27017/tarea2")
+	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer session.Close()
+	defer client.Disconnect(context.Background())
 
 	// Obtiene una referencia a la base de datos "tarea2"
-	db := session.DB("tarea2")
+	db := client.Database("tarea2")
 
 	// Obtiene una referencia a la colección "products"
-	collection := db.C("products")
+	collection := db.Collection("products")
 
 	// Crea un documento de producto
 	product := Product{
@@ -43,7 +46,7 @@ func main() {
 	}
 
 	// Inserta el documento en la colección
-	err = collection.Insert(product)
+	_, err = collection.InsertOne(context.Background(), product)
 	if err != nil {
 		log.Fatal(err)
 	}
