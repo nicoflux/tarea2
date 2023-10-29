@@ -108,6 +108,6 @@ func main() {
 			}
 		}
 
-		fmt.Printf("Procesada la orden con OrderID: %s\n", order.OrderID)
+		fmt.Printf("Se actualizó el stock: %s\n", order.OrderID)
 	}
 }
