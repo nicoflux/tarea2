@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"grpc-golang/pb"
 	"log"
 	"net"
 
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,6 +19,11 @@ import (
 )
 
 var mongo_Client *mongo.Client
+
+var despachoQueue amqp.Queue
+var inventarioQueue amqp.Queue
+var notificacionQueue amqp.Queue
+var ch *amqp.Channel
 
 type server struct {
 	pb.OrderServiceServer
@@ -64,6 +72,83 @@ type Order struct {
 	} `json:"deliveries"`
 }
 
+func startRabbitMQ() {
+	// Configura la conexión a RabbitMQ
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ch.Close()
+
+	// Declara tres colas para los servicios de despacho, inventario y notificación
+	despachoQueue, err = ch.QueueDeclare("despacho-cola", false, false, false, false, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	inventarioQueue, err = ch.QueueDeclare("inventario-cola", false, false, false, false, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	notificacionQueue, err = ch.QueueDeclare("notificacion-cola", false, false, false, false, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Colas de RabbitMQ creadas con éxito")
+
+}
+
+func sendRabbitMQ(order Order) {
+
+	// Encode it to a byte array using gob
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(order)
+	if err != nil {
+		panic(err)
+	}
+
+	// Convert buffer to byte array
+	data := buf.Bytes()
+
+	fmt.Println("Publicando estructura de orden en RabbitMQ para despacho, inventario y notificación")
+
+	// Publica la estructura de orden en las colas de los servicios
+	err = ch.Publish("", despachoQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        []byte(data),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ch.Publish("", inventarioQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        []byte(data),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ch.Publish("", notificacionQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        []byte(data),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Estructura de orden publicada en RabbitMQ para despacho, inventario y notificación")
+}
+
 func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.OrderServiceReply, error) {
 	receivedJSON, err := json.Marshal(req)
 	if err != nil {
@@ -77,6 +162,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	}
 
 	orderId := insertData(order)
+	sendRabbitMQ(order)
 	return &pb.OrderServiceReply{
 		OrderResponse: fmt.Sprintf("You order id is : %s", orderId),
 	}, nil
@@ -135,6 +221,7 @@ func main() {
 		fmt.Println("Error al conectar a MongoDB:", err)
 	}
 	defer closeMongoDBConnection(mongo_Client)
+	startRabbitMQ()
 	listener, err := net.Listen("tcp", ":8080")
 	fmt.Println("Server is running on port 8080")
 	if err != nil {
