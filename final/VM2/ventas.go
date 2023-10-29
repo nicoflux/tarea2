@@ -18,10 +18,10 @@ import (
 
 var mongo_Client *mongo.Client
 
-/* var despachoQueue amqp.Queue
+var despachoQueue amqp.Queue
 var inventarioQueue amqp.Queue
 var notificacionQueue amqp.Queue
-var ch *amqp.Channel */
+var ch *amqp.Channel
 
 type server struct {
 	pb.OrderServiceServer
@@ -70,7 +70,7 @@ type Order struct {
 	} `json:"deliveries"`
 }
 
-/* func startRabbitMQ() {
+func startRabbitMQ() {
 	// Configura la conexión a RabbitMQ
 	conn, err := amqp.Dial("amqp://guest:guest@10.10.11.233:5672/")
 	if err != nil {
@@ -102,52 +102,45 @@ type Order struct {
 
 	fmt.Println("Colas de RabbitMQ creadas con éxito")
 
-} */
+}
 
-/*
-	 func sendRabbitMQ(order Order) {
+func sendRabbitMQ(order Order) {
 
-		// Encode it to a byte array using gob
-		var buf bytes.Buffer
-		enc := gob.NewEncoder(&buf)
-		err := enc.Encode(order)
-		if err != nil {
-			panic(err)
-		}
-
-		// Convert buffer to byte array
-		data := buf.Bytes()
-
-		fmt.Println("Publicando estructura de orden en RabbitMQ para despacho, inventario y notificación")
-
-		// Publica la estructura de orden en las colas de los servicios
-		err = ch.Publish("", despachoQueue.Name, false, false, amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(data),
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = ch.Publish("", inventarioQueue.Name, false, false, amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(data),
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = ch.Publish("", notificacionQueue.Name, false, false, amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(data),
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("Estructura de orden publicada en RabbitMQ para despacho, inventario y notificación")
+	// Encode it to a byte array using gob
+	orderBytes, err := json.Marshal(order)
+	if err != nil {
+		panic(err)
 	}
-*/
+	fmt.Println("Publicando estructura de orden en RabbitMQ para despacho, inventario y notificación")
+
+	// Publica la estructura de orden en las colas de los servicios
+	err = ch.Publish("", despachoQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        orderBytes,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ch.Publish("", inventarioQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        orderBytes,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ch.Publish("", notificacionQueue.Name, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        orderBytes,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Estructura de orden publicada en RabbitMQ para despacho, inventario y notificación")
+}
+
 func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.OrderServiceReply, error) {
 	receivedJSON, err := json.Marshal(req)
 	if err != nil {
@@ -167,7 +160,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 	}, nil
 }
 
-func sendRabbitMQ(order Order) {
+/* func sendRabbitMQ(order Order) {
 	conn, err := amqp.Dial("amqp://guest:guest@10.10.11.233:5672/")
 	if err != nil {
 		log.Fatal(err)
@@ -197,7 +190,7 @@ func sendRabbitMQ(order Order) {
 	}
 
 	// Define una estructura de orden de ejemplo
-	/* 	orderData := `{
+	 	orderData := `{
 		"products": [
 			{
 				"title": "The Lord of the Rings",
@@ -220,7 +213,7 @@ func sendRabbitMQ(order Order) {
 			},
 			"phone": "555-555-5555"
 		}
-	}` */
+	}`
 
 	// Publica la estructura de orden en las colas de los servicios
 	orderBytes, err := json.Marshal(order)
@@ -253,7 +246,7 @@ func sendRabbitMQ(order Order) {
 	}
 
 	fmt.Println("Estructura de orden publicada en RabbitMQ para despacho, inventario y notificación")
-}
+} */
 
 func connectToMongoDB() (*mongo.Client, error) {
 	//URI := os.Getenv("CONNECTION_STRING")
@@ -308,6 +301,7 @@ func main() {
 		fmt.Println("Error al conectar a MongoDB:", err)
 	}
 	defer closeMongoDBConnection(mongo_Client)
+	startRabbitMQ()
 	listener, err := net.Listen("tcp", ":8080")
 	fmt.Println("Server is running on port 8080")
 	if err != nil {
