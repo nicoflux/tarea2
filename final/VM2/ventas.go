@@ -308,7 +308,6 @@ func main() {
 		fmt.Println("Error al conectar a MongoDB:", err)
 	}
 	defer closeMongoDBConnection(mongo_Client)
-	startRabbitMQ()
 	listener, err := net.Listen("tcp", ":8080")
 	fmt.Println("Server is running on port 8080")
 	if err != nil {
