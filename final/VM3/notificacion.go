@@ -14,13 +14,13 @@ type Order struct {
 	OrderID  string `json:"orderID"`
 	GroupID  string `json:"groupID"`
 	Products []struct {
-		Title       string `json:"title"`
-		Author      string `json:"author"`
-		Genre       string `json:"genre"`
-		Pages       int    `json:"pages"`
-		Publication string `json:"publication"`
-		Quantity    int    `json:"quantity"`
-		Price       int    `json:"price"`
+		Title       string  `json:"title"`
+		Author      string  `json:"author"`
+		Genre       string  `json:"genre"`
+		Pages       int     `json:"pages"`
+		Publication string  `json:"publication"`
+		Quantity    int     `json:"quantity"`
+		Price       float64 `json:"price"`
 	} `json:"products"`
 	Customer struct {
 		Name     string `json:"name"`
