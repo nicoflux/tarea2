@@ -1,6 +1,0 @@
-VM1 : 10.10.10.168 ubuntu G4b!7S9k#3 (cliente)
-VM2 : 10.10.11.221 ubuntu T6w!3J5l#2 (servicio de ventas)
-VM3 : 10.10.11.233 ubuntu 8N#1f9C7m! (stream de eventos)
-
-VM1 -> VM2 : GRPC
-VM2 -> VM3 : RabbitMQ
