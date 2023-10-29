@@ -168,7 +168,7 @@ func (s *server) Order(ctx context.Context, req *pb.OrderServiceRequest) (*pb.Or
 }
 
 func sendRabbitMQ(order Order) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@10.10.11.233:5672/")
 	if err != nil {
 		log.Fatal(err)
 	}
