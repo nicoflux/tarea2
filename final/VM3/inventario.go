@@ -102,7 +102,7 @@ func main() {
 			filter := bson.M{"title": product.Title}
 			update := bson.M{"$inc": bson.M{"quantity": -product.Quantity}}
 
-			_, err := collection.UpdateOne(ctx, filter, update)
+			_, err := collection.UpdateOne(context.TODO(), filter, update)
 			if err != nil {
 				log.Println("Error al actualizar la base de datos:", err)
 			}
